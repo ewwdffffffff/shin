@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>오늘의 야식</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="filter-screen">
+    <h1 class="filter-title">야식은 살이쪄요!!!</h1>
+    <div class="split-container">
+      <fieldset
+        class="choice-card dietFilter_on"
+        onclick="selectCard('dietFilter_on')"
+      >
+        <div class="card-info">
+          <span class="badge">ON</span>
+          <h2 class="card-title">
+            <span class="card-bullet"></span>
+            다이어트 필터
+          </h2>
+          <p class="card-desc">
+            칼로리 등을 고려하여<br />
+            그리 맛있는 편은 아니지만<br />
+            살이 잘 찌지 않는 음식들을<br />
+            추천
+          </p>
+        </div>
+        <div class="card-graphic">
+          <img src="images/vegetable.jpg" alt="야채" class="graphic-img" />
+        </div>
+      </fieldset>
+      <fieldset
+        class="choice-card dietFilter_off"
+        onclick="selectCard('dietFilter_off')"
+      >
+        <div class="card-info">
+          <span class="badge">OFF</span>
+          <h2 class="card-title">
+            <span class="card-bullet"></span>
+            그냥 먹고 살찌기
+          </h2>
+          <p class="card-desc">
+            살찌는것을 아예 신경쓰지 않고<br />
+            확실히 맛있고 자극적인 음식들을 추천<br />
+            (어차피 야식먹으면 살찌는데 즐<br />
+            기는 자들을 위한 메뉴)
+          </p>
+        </div>
+        <div class="card-graphic">
+          <img
+            src="images/pleasure_food.jpeg"
+            alt="자극적 음식"
+            class="graphic-img"
+          />
+        </div>
+      </fieldset>
+    </div>
+    <div class="btn-complete-wrapper">
+      <button class="btn-complete" onclick="submitSelection()">완료</button>
+    </div>
+
+    <script>
+      let selectedType = null;
+
+      function selectCard(type) {
+        document.querySelectorAll(".choice-card").forEach((card) => {
+          card.classList.remove("selected");
+        });
+
+        const selectedCard = document.querySelector("." + type);
+        selectedCard.classList.add("selected");
+
+        selectedType = type;
+      }
+
+      function submitSelection() {
+        if (!selectedType) {
+          alert("추천받을 필터를 선택해 주세요!");
+          return;
+        }
+        location.href = "세부필터.html?type=" + selectedType;
+      }
+    </script>
+  </body>
+</html>

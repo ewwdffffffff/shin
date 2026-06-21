@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>오늘의 야식</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body class="filter-screen">
+    <h1 class="filter-title">세부 필터 설정</h1>
+
+    <div class="filter-table-wrapper">
+      <table class="filter-table">
+        <tbody>
+          <tr id="row-taste" class="filter-row">
+            <td onclick="toggleFilter('매운맛')">
+              <span class="cell-circle" data-val="매운맛"></span> 매운맛
+            </td>
+            <td onclick="toggleFilter('짠맛')">
+              <span class="cell-circle" data-val="짠맛"></span> 짠맛
+            </td>
+            <td onclick="toggleFilter('단맛')">
+              <span class="cell-circle" data-val="단맛"></span> 단맛
+            </td>
+            <td onclick="toggleFilter('감칠맛')">
+              <span class="cell-circle" data-val="감칠맛"></span> 감칠맛
+            </td>
+            <td onclick="toggleFilter('혼밥')">
+              <span class="cell-circle" data-val="혼밥"></span> 혼밥
+            </td>
+          </tr>
+          <tr id="row-foodtype" class="filter-row">
+            <td onclick="toggleFilter('밥류')">
+              <span class="cell-circle" data-val="밥류"></span> 밥류
+            </td>
+            <td onclick="toggleFilter('면류')">
+              <span class="cell-circle" data-val="면류"></span> 면류
+            </td>
+            <td onclick="toggleFilter('빵류')">
+              <span class="cell-circle" data-val="빵류"></span> 빵류
+            </td>
+            <td onclick="toggleFilter('친구들과')">
+              <span class="cell-circle" data-val="친구들과"></span> 친구들과
+            </td>
+            <td onclick="toggleFilter('연인과')">
+              <span class="cell-circle" data-val="연인과"></span> 연인과
+            </td>
+          </tr>
+          <tr id="row-style-portion" class="filter-row">
+            <td onclick="toggleFilter('튀김류')">
+              <span class="cell-circle" data-val="튀김류"></span> 튀김류
+            </td>
+            <td onclick="toggleFilter('구이류')">
+              <span class="cell-circle" data-val="구이류"></span> 구이류
+            </td>
+            <td onclick="toggleFilter('야채류')">
+              <span class="cell-circle" data-val="야채류"></span> 야채류
+            </td>
+            <td onclick="toggleFilter('국류')">
+              <span class="cell-circle" data-val="국류"></span> 국류
+            </td>
+            <td onclick="toggleFilter('전체 선택')">
+              <span class="cell-circle" data-val="전체 선택"></span> 전체 선택
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="btn-complete-wrapper">
+      <button class="btn-complete" onclick="submitFilters()">완료</button>
+    </div>
+
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const type = urlParams.get("type") || "dietFilter_on";
+
+      const allFilters = [
+        "매운맛",
+        "짠맛",
+        "단맛",
+        "감칠맛",
+        "혼밥",
+        "밥류",
+        "면류",
+        "빵류",
+        "친구들과",
+        "연인과",
+        "튀김류",
+        "구이류",
+        "야채류",
+        "국류",
+      ];
+
+      let selectedFilters = [];
+
+      const selectClass = "selected-" + type;
+      const rowClass = "selected-row-" + type;
+
+      window.addEventListener("DOMContentLoaded", () => {
+        updateVisualSelection();
+      });
+
+      function toggleFilter(value) {
+        if (value === "전체 선택") {
+          selectedFilters = selectedFilters.includes("전체 선택")
+            ? []
+            : [...allFilters, "전체 선택"];
+        } else {
+          if (selectedFilters.includes(value)) {
+            selectedFilters = selectedFilters.filter((item) => item !== value);
+          } else {
+            selectedFilters.push(value);
+          }
+
+          // 전체 선택 동기화
+          const allSelected = allFilters.every((f) =>
+            selectedFilters.includes(f),
+          );
+          if (allSelected) {
+            if (!selectedFilters.includes("전체 선택"))
+              selectedFilters.push("전체 선택");
+          } else {
+            selectedFilters = selectedFilters.filter(
+              (item) => item !== "전체 선택",
+            );
+          }
+        }
+        updateVisualSelection();
+      }
+
+      function updateVisualSelection() {
+        document.querySelectorAll(".filter-row").forEach((row) => {
+          let hasSelectedCell = false;
+
+          row.querySelectorAll(".cell-circle").forEach((circle) => {
+            const val = circle.getAttribute("data-val");
+            const cell = circle.closest("td");
+            const isSelected = selectedFilters.includes(val);
+
+            circle.classList.toggle(selectClass, isSelected);
+            if (cell) cell.classList.toggle(selectClass, isSelected);
+
+            if (isSelected) hasSelectedCell = true;
+          });
+
+          row.classList.toggle(rowClass, hasSelectedCell);
+        });
+      }
+
+      function submitFilters() {
+        if (selectedFilters.length === 0) {
+          alert("1개 이상의 필터를 선택해 주세요!");
+          return;
+        }
+
+        const params = new URLSearchParams();
+        params.set("type", type);
+        params.set("filters", selectedFilters.join(","));
+
+        location.href = "추천시작.html?" + params.toString();
+      }
+    </script>
+  </body>
+</html>

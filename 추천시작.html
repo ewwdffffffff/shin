@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>오늘의 야식</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="js/database.js"></script>
+    <link rel="stylesheet" href="css/추천시작.css" />
+  </head>
+  <body class="filter-screen">
+    <div id="slotMachineModal" class="modal-overlay">
+      <div
+        id="slotMachineCard"
+        class="filter-list-card"
+        style="
+          width: 90%;
+          max-width: 650px;
+          height: auto !important;
+          min-height: 440px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          padding: 3.5rem;
+          border-color: rgba(255, 255, 255, 0.15);
+          border-radius: 12px;
+        "
+      >
+        <div
+          style="
+            background: #121216;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            width: 280px;
+            height: 210px;
+            margin-bottom: 2.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+          "
+        >
+          <span
+            id="slotEmoji"
+            style="font-size: 10rem; display: none; line-height: 1; z-index: 1"
+            >🍽️</span
+          >
+          <img
+            id="slotImage"
+            style="
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              z-index: 2;
+              display: block;
+              transition:
+                transform 0.08s ease-in-out,
+                filter 0.08s ease-in-out;
+            "
+            src="images/vegetable.jpg"
+            alt="음식"
+          />
+        </div>
+        <p
+          id="slotStatus"
+          style="
+            font-size: 2.6rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0;
+            letter-spacing: -1px;
+          "
+        >
+          추천중...
+        </p>
+      </div>
+    </div>
+
+    <div class="screen3-container">
+      <div class="left-section">
+        <div class="ad-container">
+          <div class="ad-badge-left">광고</div>
+          <div class="ad-choices-overlay">
+            <span class="ad-info-btn">ⓘ</span>
+            <span class="ad-close-btn">×</span>
+          </div>
+          <img
+            src="images/woojin_burger_ad.jpg"
+            alt="우진이네 더블치즈버거 출시 광고"
+          />
+        </div>
+
+        <div class="ad-container">
+          <div class="ad-badge-left">광고</div>
+          <div class="ad-choices-overlay">
+            <span class="ad-info-btn">ⓘ</span>
+            <span class="ad-close-btn">×</span>
+          </div>
+          <img
+            src="images/woojin_car_ad.jpg"
+            alt="우진 모터스 로드스터 출시 광고"
+          />
+        </div>
+      </div>
+
+      <div class="right-section">
+        <div class="filter-list-card" id="filterCard">
+          <h2 class="filter-list-title">
+            <span class="title-main">내 선택</span>
+            <span class="title-sub" id="planLabel"></span>
+          </h2>
+          <ul class="filter-list-group" id="filterTags"></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="custom-complete-wrapper">
+      <p class="custom-complete-desc">
+        그동안의 필터 데이터를 바탕으로 추천을 시작합니다.
+      </p>
+      <button class="btn-complete-futuristic" onclick="startRecommendation()">
+        추천시작
+      </button>
+    </div>
+
+    <script>
+      const startSound = new Audio("audio/추천시작.mp3");
+      const spinSound = new Audio("audio/spin.mp3");
+      const winSound = new Audio("audio/win.mp3");
+      startSound.preload = "auto";
+      spinSound.preload = "auto";
+      winSound.preload = "auto";
+
+      const urlParams = new URLSearchParams(location.search);
+      const type = urlParams.get("type") || "dietFilter_on";
+      const filtersParam = urlParams.get("filters") || "";
+
+      window.addEventListener("DOMContentLoaded", () => {
+        const planText =
+          type === "dietFilter_on" ? "다이어트 필터" : "신경 안씀";
+        document.getElementById("planLabel").outerHTML =
+          `<span id="planLabel" style="font-size: 1.55rem; font-weight: 700; color: var(--wire-white); font-family: 'Outfit', sans-serif;">[${planText}]</span>`;
+
+        const filters = filtersParam
+          .split(",")
+          .filter((f) => f && f !== "전체 선택");
+        const container = document.getElementById("filterTags");
+        if (filters.length === 0) {
+          container.innerHTML = `<p style="color: var(--wire-gray);">선택된 필터가 없습니다.</p>`;
+        } else {
+          container.innerHTML = filters
+            .map(
+              (f) => `
+            <li class="filter-list-item item-${type}">
+              <span class="item-check">✓</span>
+              <span class="filter-item-value">${f}</span>
+            </li>
+          `,
+            )
+            .join("");
+        }
+      });
+
+      function startRecommendation() {
+        const list = foodDatabase[type] || foodDatabase.dietFilter_on;
+        const userFilters = filtersParam
+          .split(",")
+          .filter((f) => f && f !== "전체 선택");
+
+        let activePool = list;
+
+        if (userFilters.length > 0) {
+          const itemsWithScores = list.map((item) => {
+            const matchCount = item.tags.filter((tag) =>
+              userFilters.includes(tag),
+            ).length;
+            return { item, score: matchCount };
+          });
+
+          const maxScore = Math.max(...itemsWithScores.map((i) => i.score));
+
+          if (maxScore > 0) {
+            activePool = itemsWithScores
+              .filter((i) => i.score === maxScore)
+              .map((i) => i.item);
+          }
+        }
+
+        const recommendation =
+          activePool[Math.floor(Math.random() * activePool.length)];
+
+        const modal = document.getElementById("slotMachineModal");
+        const slotCard = document.getElementById("slotMachineCard");
+        slotCard.className = `filter-list-card`;
+        modal.classList.add("active");
+
+        const emojiEl = document.getElementById("slotEmoji");
+        const imageEl = document.getElementById("slotImage");
+
+        startSound.currentTime = 0;
+        startSound
+          .play()
+          .catch((e) => console.log("Audio play blocked/failed:", e));
+
+        const totalSteps = 22;
+        const totalMs = 4150;
+
+        const weights = [];
+        let weightSum = 0;
+        for (let i = 0; i < totalSteps; i++) {
+          const w = 1 + Math.pow(i / totalSteps, 2) * 6;
+          weights.push(w);
+          weightSum += w;
+        }
+
+        const delays = weights.map((w) => (w / weightSum) * totalMs);
+
+        let currentStep = 0;
+
+        emojiEl.style.display = "none";
+        imageEl.style.display = "block";
+
+        function runJackpotSpin() {
+          if (currentStep < totalSteps) {
+            let randomItem;
+            do {
+              randomItem = list[Math.floor(Math.random() * list.length)];
+            } while (randomItem.name === recommendation.name);
+
+            imageEl.src = randomItem.image;
+            imageEl.alt = randomItem.name;
+
+            imageEl.style.filter = "blur(3px)";
+            imageEl.style.transform = "scale(1.05) translateY(-5px)";
+            setTimeout(() => {
+              imageEl.style.transform = "scale(1.05) translateY(5px)";
+            }, delays[currentStep] / 2);
+
+            spinSound.currentTime = 0;
+            spinSound
+              .play()
+              .catch((e) => console.log("Audio play blocked/failed:", e));
+
+            const currentDelay = delays[currentStep];
+            currentStep++;
+
+            setTimeout(runJackpotSpin, currentDelay);
+          } else {
+            imageEl.src = recommendation.image;
+            imageEl.alt = recommendation.name;
+            imageEl.style.filter = "none";
+            imageEl.style.transform = "none";
+
+            const statusEl = document.getElementById("slotStatus");
+            if (statusEl) statusEl.textContent = recommendation.name;
+
+            winSound.currentTime = 0;
+            winSound
+              .play()
+              .catch((e) => console.log("Audio play blocked/failed:", e));
+
+            setTimeout(() => {
+              location.href = `결과.html?type=${type}&filters=${encodeURIComponent(filtersParam)}&food=${encodeURIComponent(recommendation.name)}`;
+            }, 1000);
+          }
+        }
+
+        setTimeout(runJackpotSpin, 150);
+      }
+    </script>
+  </body>
+</html>

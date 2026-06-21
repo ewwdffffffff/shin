@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>오늘의 야식</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="js/database.js"></script>
+    <link rel="stylesheet" href="css/결과.css" />
+  </head>
+  <body>
+    <h1 class="welcome-banner welcome-text">오늘의 야식</h1>
+
+    <div class="results-container">
+      <fieldset class="left-column">
+        <div class="food-photo-card">
+          <span id="resultEmoji">🍽️</span>
+
+          <img
+            id="resultImage"
+            src=""
+            alt=""
+            onerror="
+              this.style.display = 'none';
+              document.getElementById('resultEmoji').style.display = 'block';
+            "
+            onload="
+              this.style.display = 'block';
+              document.getElementById('resultEmoji').style.display = 'none';
+            "
+          />
+        </div>
+        <h2 class="food-name-title" id="resultTitle">추천 메뉴</h2>
+      </fieldset>
+
+      <div class="right-column">
+        <fieldset class="food-desc-card">
+          <p class="modal-desc" id="resultDesc"></p>
+        </fieldset>
+        <div class="action-buttons">
+          <button class="btn-close btn-action" onclick="goToRecommender()">
+            다시 추천
+          </button>
+          <button
+            class="btn-close btn-action btn-action-primary"
+            onclick="location.href = '시작.html'"
+          >
+            홈으로
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+      }
+
+      function goToRecommender() {
+        const type = getQueryParam("type") || "dietFilter_on";
+        const filters = getQueryParam("filters") || "";
+        location.href = `추천시작.html?type=${type}&filters=${encodeURIComponent(filters)}`;
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        const type = getQueryParam("type") || "dietFilter_on";
+        const list = foodDatabase[type] || foodDatabase.dietFilter_on;
+        const passedFood = getQueryParam("food");
+
+        const recommendation =
+          list.find((item) => item.name === passedFood) || list[0];
+
+        document.getElementById("resultEmoji").textContent =
+          type === "dietFilter_on" ? "🥗" : "🍕";
+        document.getElementById("resultTitle").textContent =
+          recommendation.name;
+        document.getElementById("resultDesc").textContent = recommendation.desc;
+
+        const imgEl = document.getElementById("resultImage");
+        if (imgEl && recommendation.image) {
+          imgEl.src = recommendation.image;
+          imgEl.alt = recommendation.name;
+        }
+      });
+    </script>
+  </body>
+</html>
